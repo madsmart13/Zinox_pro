@@ -1,63 +1,171 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <title>Zinox Pro - ورود</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      font-family: 'Vazirmatn', sans-serif;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .container {
-      text-align: center;
-    }
-    h1 {
-      font-size: 2.2rem;
-      margin-bottom: 1.5rem;
-    }
-    button {
-      background: #5865F2;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      font-size: 1rem;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      transform: scale(1.05);
-      background: #4752c4;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>به Zinox Pro خوش آمدید</h1>
-    <button onclick="loginWithDiscord()">لینک کردن اکانت دیسکورد</button>
+<!-- بخش اتصال Discord برای Zinox_pro -->
+<div class="panel">
+  <h2>Zinox_pro ورود</h2>
+
+  <div class="discord-connect">
+    <button class="discord-btn-main" onclick="toggleSection('discordLogin')">
+      🚀 اتصال حساب Discord
+    </button>
+
+    <div id="discordLogin" class="hidden">
+      <a id="discordAuthBtn" href="" target="_blank">
+        <button class="discord-login-btn">
+          ورود با Discord
+        </button>
+      </a>
+      <div id="discordUserInfo"></div>
+    </div>
   </div>
+</div>
 
-  <script>
-    const DISCORD_CLIENT_ID = "1413174935593156718"; // اینجا Client ID واقعی‌تو بذار
-    const REDIRECT_URI = "https://madsmart13.github.io/Zinox_pro/app.html";
-    const AUTH_ENDPOINT = "https://discord.com/api/oauth2/authorize";
+<script>
+  // اطلاعات Discord OAuth2
+  const DISCORD_CLIENT_ID = "1413174935593156718";
+  const REDIRECT_URI = encodeURIComponent("https://madsmart13.github.io/Zinox_pro/app.html");
+  const DISCORD_SCOPE = "identify";
+  const RESPONSE_TYPE = "token";
 
-    function loginWithDiscord() {
-      const params = new URLSearchParams({
-        client_id: DISCORD_CLIENT_ID,
-        redirect_uri: REDIRECT_URI,
-        response_type: "token",
-        scope: "identify"
-      });
-      window.location.href = `${AUTH_ENDPOINT}?${params.toString()}`;
+  // لینک OAuth2
+  const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=${DISCORD_SCOPE}`;
+  document.getElementById("discordAuthBtn").href = discordAuthUrl;
+
+  // دریافت توکن بعد از برگشت از Discord و نمایش اطلاعات کاربر
+  const fragment = new URLSearchParams(window.location.hash.slice(1));
+  const accessToken = fragment.get("access_token");
+  const userInfoDiv = document.getElementById("discordUserInfo");
+
+  if (accessToken) {
+    fetch("https://discord.com/api/users/@me", {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+    .then(res => res.json())
+    .then(user => {
+      userInfoDiv.innerHTML = `<p>نام کاربری: ${user.username}#${user.discriminator}</p>
+                               <p>Discord ID: ${user.id}</p>`;
+      localStorage.setItem("discord_user", JSON.stringify(user));
+    });
+  } else {
+    const savedUser = localStorage.getItem("discord_user");
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      userInfoDiv.innerHTML = `<p>نام کاربری: ${user.username}#${user.discriminator}</p>
+                               <p>Discord ID: ${user.id}</p>`;
     }
-  </script>
-</body>
-</html>
+  }
+
+  // تابع باز/بستن بخش Discord
+  function toggleSection(id){
+    const el = document.getElementById(id);
+    el.classList.toggle('hidden');
+  }
+</script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+  body {
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+    overflow-x: hidden;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #06010f, #000 90%);
+  }
+
+  /* پس‌زمینه فضایی واقعی با دو لایه ستاره */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 200%;
+    height: 200%;
+    z-index: -2;
+    background-repeat: repeat;
+    background-size: cover;
+    animation: moveStars 180s linear infinite;
+  }
+
+  /* لینک‌های معتبر برای گیت‌هاب CDN */
+  body::before {
+    background-image: url('https://raw.githubusercontent.com/ItsKaitoStar/assets/main/stars-layer1.png');
+    opacity: 0.4;
+  }
+  body::after {
+    background-image: url('https://raw.githubusercontent.com/ItsKaitoStar/assets/main/stars-layer2.png');
+    opacity: 0.6;
+    animation-duration: 240s;
+  }
+
+  @keyframes moveStars {
+    from { transform: translate(0,0); }
+    to { transform: translate(-300px, -300px); }
+  }
+
+  /* پنل اصلی */
+  .panel {
+    background: rgba(10, 5, 25, 0.85);
+    border: 2px solid #b400ff;
+    box-shadow: 0 0 30px #8a00ff, inset 0 0 20px #b400ff;
+    border-radius: 20px;
+    padding: 40px 50px;
+    text-align: center;
+    width: 420px;
+    backdrop-filter: blur(10px);
+  }
+
+  .panel h2 {
+    color: #d0a6ff;
+    text-shadow: 0 0 25px #a200ff, 0 0 50px #7a00ff;
+    margin-bottom: 25px;
+  }
+
+  /* دکمه اصلی اتصال */
+  .discord-btn-main {
+    background: linear-gradient(135deg,#b400ff,#6f00ff);
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 25px #8a00ff;
+    transition: 0.3s ease;
+  }
+
+  .discord-btn-main:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 40px #b400ff, 0 0 70px #7f00ff;
+  }
+
+  /* بخش ورود */
+  .discord-login-btn {
+    margin-top: 20px;
+    background: linear-gradient(135deg,#9f00ff,#6a00ff);
+    color: #fff;
+    border: none;
+    border-radius: 15px;
+    padding: 15px 45px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    box-shadow: 0 0 20px #8a00ff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .discord-login-btn:hover {
+    transform: scale(1.07);
+    box-shadow: 0 0 40px #b400ff, 0 0 70px #6f00ff;
+  }
+
+  #discordUserInfo {
+    margin-top: 25px;
+    color: #d0a6ff;
+    font-size: 1rem;
+  }
+
+  .hidden { display: none; }
+</style>
