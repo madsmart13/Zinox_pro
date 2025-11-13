@@ -1,281 +1,641 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>Zinox pro </title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Zinox_pro - داشبورد</title>
 <style>
-  body {
-    margin: 0;
-    padding: 0;
-    background: linear-gradient(135deg, #1f1c2c, #928dab);
-    font-family: 'Vazirmatn', sans-serif;
-    color: white;
-  }
-  header {
-    padding: 15px;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .points {
-    font-weight: bold;
-    font-size: 1.2rem;
-  }
-  main { padding: 20px; }
-  .panel { background: rgba(0,0,0,0.5); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-  button.toggle-btn, button { 
-    background: linear-gradient(135deg,#5865F2,#4752c4); 
-    color: white; 
-    border: none; 
-    padding: 12px 20px; 
-    font-size: 1rem; 
-    border-radius: 12px; 
-    cursor: pointer; 
-    transition: 0.3s; 
-    margin: 5px 0;
-  }
-  button.toggle-btn:hover, button:hover { transform: scale(1.05); box-shadow: 0 0 10px #fff; }
-  .hidden { display: none; }
-  input[type="text"] { padding: 8px; border-radius: 6px; border: none; width: 220px; margin-right: 10px; }
-  .shop-item { margin-bottom: 15px; display: flex; align-items: center; }
-  .shop-item img { width: 50px; height: 50px; margin-left: 10px; border-radius: 8px; }
-  .server-gif { width: 60px; height: 60px; margin-left: 10px; vertical-align: middle; }
+/* FONT */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap');
+
+:root{
+  --bg-dark:#04040a;
+  --panel: rgba(18,14,30,0.65);
+  --accent:#7b61ff; /* بنفش سایبری */
+  --muted:#9aa7b3;
+  --glass: rgba(255,255,255,0.02);
+}
+
+/* base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: 'Orbitron', sans-serif;
+  background: var(--bg-dark);
+  color: #eaf6ff;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-y:auto;
+}
+
+/* Canvas background container (fills viewport) */
+#spaceBg{
+  position:fixed;
+  inset:0;
+  z-index:0;
+}
+
+/* header */
+header{
+  position:relative;
+  z-index:3;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px 26px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.28), rgba(12,6,30,0.6));
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.header-title{ color:var(--accent); font-size:1.4rem; display:flex; align-items:center; gap:12px; }
+.points{
+  display:flex; align-items:center; gap:10px;
+  background: var(--glass);
+  padding:8px 12px; border-radius:10px; border:1px solid rgba(123,97,255,0.12);
+}
+
+/* points icon */
+.points img{ width:28px; height:28px; display:block; opacity:0.95; transform-origin:center; animation:float 5s ease-in-out infinite; }
+@keyframes float{ 0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)} }
+
+/* main layout */
+main{ position:relative; z-index:3; max-width:1100px; margin:28px auto; padding:0 16px 60px 16px; }
+
+/* panel */
+.panel{
+  background: var(--panel);
+  border-radius:12px;
+  padding:18px;
+  margin-bottom:18px;
+  border:1px solid rgba(255,255,255,0.03);
+  box-shadow: 0 12px 30px rgba(2,4,10,0.6);
+}
+
+/* buttons */
+button, .btn{
+  background: linear-gradient(180deg, rgba(123,97,255,0.12), rgba(123,97,255,0.06));
+  color: #eaf6ff;
+  border: 1px solid rgba(123,97,255,0.12);
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+  transition: transform .12s, box-shadow .12s;
+}
+button:hover, .btn:hover{ transform: translateY(-3px); box-shadow: 0 10px 30px rgba(3,7,20,0.6); }
+
+/* input */
+input[type="text"]{
+  padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.01); color:#eaf6ff; outline:none; width:260px; font-family:inherit;
+}
+
+/* shop item */
+.shop-item{ display:flex; align-items:center; gap:12px; padding:10px; border-radius:8px; margin-bottom:12px; background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
+.shop-item img{ width:60px; height:60px; border-radius:8px; object-fit:cover; box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
+
+/* wheel */
+#wheelCanvas{ width:320px; height:320px; border-radius:50%; background: rgba(0,0,0,0.06); display:block; margin:0 auto; box-shadow: 0 10px 30px rgba(2,4,20,0.6); }
+
+/* modal (purchase flow) */
+.modal-backdrop{
+  position:fixed; inset:0; background: rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:1000;
+}
+.modal{ background: linear-gradient(180deg, #0b0b14, #070712); padding:18px; border-radius:12px; width:420px; border:1px solid rgba(123,97,255,0.12); box-shadow:0 20px 60px rgba(0,0,0,0.7); color:#eaf6ff; }
+
+/* loading motion for server4 */
+.loader{
+  width:34px;height:8px;border-radius:8px; background: linear-gradient(90deg, rgba(123,97,255,0.2), rgba(123,97,255,0.7));
+  position:relative; overflow:hidden;
+}
+.loader::after{
+  content:''; position:absolute; left:-40%; top:0; width:40%; height:100%; background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.18));
+  animation: slide 1.1s linear infinite;
+}
+@keyframes slide{ 0%{left:-40%}100%{left:100%} }
+
+/* small messages */
+.msg{ margin-top:10px; color:var(--muted); font-size:0.95rem; }
+
+/* responsive tweaks */
+@media (max-width:760px){
+  .shop-item img{ width:48px; height:48px }
+  input[type="text"]{ width:100% }
+  .modal{ width:92% }
+}
 </style>
 </head>
 <body>
 
+<!-- Canvas background (drawn by JS) -->
+<canvas id="spaceBg"></canvas>
+
 <header>
-  <h2>Zinox_pro - داشبورد</h2>
-  <div class="points">امتیاز: <span id="points">0</span></div>
+  <div class="header-title">Zinox_pro - Galactic Dashboard</div>
+  <div class="points" title="امتیاز شما">
+    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'><path d='M12 2l2.9 6.3L22 9.3l-5 4.3L18.2 22 12 18.3 5.8 22 7 13.6 2 9.3l7.1-1L12 2z'/></svg>" alt="points">
+    <div>امتیاز: <strong id="points">0</strong></div>
+  </div>
 </header>
 
 <main>
-
-<!-- اطلاعات کاربر -->
-<div class="panel">
-  <button class="toggle-btn" onclick="toggleSection('info')">نمایش اطلاعات کاربر</button>
-  <div id="info" class="hidden">
-    <p>نام: <span id="username">در حال بارگذاری...</span></p>
-    <p>Discord ID: <span id="userid">...</span></p>
-  </div>
-</div>
-
-<!-- تسک ها -->
-<div class="panel">
-  <button class="toggle-btn" onclick="toggleSection('tasks')">تسک‌ها</button>
-  <div id="tasks" class="hidden">
-    <button onclick="completeTask('daily')">چک کردن روزانه سایت</button>
-    <button onclick="joinDiscordChannel()">ورود به چنل دیسکورد</button>
-    <button onclick="showMobileInput()">ثبت شماره موبایل</button>
-    <div id="mobileInput" class="hidden">
-      <input type="text" id="mobile" placeholder="شماره موبایل خود را وارد کنید">
-      <button onclick="submitMobile()">ثبت</button>
-      <p id="mobileMsg"></p>
+  <!-- user info -->
+  <div class="panel">
+    <button class="btn" onclick="toggle('info')">نمایش اطلاعات کاربر</button>
+    <div id="info" class="hidden msg">
+      <p>نام: <span id="username">در حال بارگذاری...</span></p>
+      <p>Discord ID: <span id="userid">...</span></p>
     </div>
   </div>
-</div>
 
-<!-- فروشگاه -->
-<div class="panel">
-  <button class="toggle-btn" onclick="toggleSection('shop')">فروشگاه</button>
-  <div id="shop" class="hidden">
-    <div class="shop-item"><img src="https://images.g2a.com/uiadminimages/170x226/1x1x0/discord-nitro-1-mois/f8ad240ec4b64dddbc8c9cc3"><button onclick="buyItem('boost', 2000)">بوست دیسکورد 1 ماهه (2000 امتیاز)</button></div>
-    <div class="shop-item"><img src="https://img.freepik.com/premium-vector/premium-icon-vector-illustration-design_535345-6533.jpg"><button onclick="buyItem('premium', 1400)">اشتراک پرمیوم سرورها (1400 امتیاز)</button></div>
-    <div class="shop-item"><img src="https://cdn-icons-png.flaticon.com/512/6701/6701712.png"><button onclick="buyItem('vip', 1200)">وی ای پی + (1200 امتیاز)</button></div>
-    <div class="shop-item"><img src="https://limogfx.ir/wp-content/uploads/2024/04/%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%DA%A9-%D9%86%D9%82%D8%B1%D9%87-%D8%A7%DB%8C-1.webp"><button onclick="buyItem('silver', 900)">اشتراک نقره ای (900 امتیاز)</button></div>
-    <div class="shop-item"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7xSj1j4VpAmTuq9LBOFrnJzDJ2P95yN1Cp4cDnNjgjIJ8EFyf87q1EpKnMJ5DBetcgdU&usqp=CAU"><button onclick="buyItem('bronze', 590)">اشتراک برنز (590 امتیاز)</button></div>
-    <div class="shop-item"><img src="https://framerusercontent.com/images/JzzTUFwDNuBVlrLsYB6bSWo8RyM.png"><button onclick="buyItem('minecraft', 30000)">خرید سرور ماینکرافت (30000 امتیاز)</button></div>
-    <p id="shopMsg"></p>
-  </div>
-</div>    
+  <!-- tasks -->
+  <div class="panel">
+    <button class="btn" onclick="toggle('tasks')">تسک‌ها</button>
+    <div id="tasks" class="hidden" style="margin-top:12px;">
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+        <button onclick="checkDaily()">چک کردن روزانه سایت (هر 24 ساعت)</button>
+        <button onclick="joinDiscordChannel()">ورود به چنل دیسکورد</button>
 
-<!-- بخش گردونه حرفه‌ای گیمینگ -->
-<div class="panel">
-  <button class="toggle-btn" onclick="toggleSection('wheelSection')">گردونه</button>
-  <div id="wheelSection" class="hidden">
-    <div id="wheelWrapper" style="position:relative; width:300px; height:300px; margin:20px auto;">
-      <canvas id="wheelCanvas" width="300" height="300" style="border-radius:50%; box-shadow:0 0 20px #7289da;"></canvas>
-      <div id="wheelPointer" style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:20px solid #ff0;"></div>
+        <div>
+          <button onclick="showMobileInput()">ثبت شماره موبایل</button>
+          <div id="mobileInput" class="hidden" style="margin-top:10px;">
+            <input type="text" id="mobile" placeholder="09xxxxxxxxx">
+            <button onclick="submitMobile()">ثبت</button>
+            <p id="mobileMsg" class="msg"></p>
+          </div>
+        </div>
+      </div>
     </div>
-    <button id="wheelBtn" onclick="BM_proWheel.spin()" style="margin-top:15px; padding:12px 20px; border:none; border-radius:12px; font-size:1rem; cursor:pointer; background: linear-gradient(135deg,#ff00ff,#ff69b4); color:white; box-shadow:0 0 10px #ff69b4; transition:0.3s;">چرخش گردونه</button>
-    <p id="wheelMsg" style="margin-top:10px; font-weight:bold; color:#ff0; text-shadow:1px 1px 3px #000;"></p>
-    <p id="wheelTimer" style="margin-top:5px; color:#ccc;"></p>
   </div>
-</div>
+
+  <!-- shop -->
+  <div class="panel">
+    <button class="btn" onclick="toggle('shop')">فروشگاه</button>
+    <div id="shop" class="hidden" style="margin-top:12px;">
+      <div class="shop-item">
+        <img src="https://images.g2a.com/uiadminimages/170x226/1x1x0/discord-nitro-1-mois/f8ad240ec4b64dddbc8c9cc3" alt="">
+        <div style="flex:1"><strong>بوست دیسکورد 1 ماهه</strong><div class="msg">2000 امتیاز</div></div>
+        <button onclick="openBuyModal('بوست دیسکورد 1 ماهه',2000,'boost')">خرید</button>
+      </div>
+
+      <div class="shop-item">
+        <img src="https://img.freepik.com/premium-vector/premium-icon-vector-illustration-design_535345-6533.jpg" alt="">
+        <div style="flex:1"><strong>اشتراک پرمیوم سرورها</strong><div class="msg">1400 امتیاز</div></div>
+        <button onclick="openBuyModal('اشتراک پرمیوم سرورها',1400,'premium')">خرید</button>
+      </div>
+
+      <div class="shop-item">
+        <img src="https://cdn-icons-png.flaticon.com/512/6701/6701712.png" alt="">
+        <div style="flex:1"><strong>وی ای پی +</strong><div class="msg">1200 امتیاز</div></div>
+        <button onclick="openBuyModal('وی ای پی +',1200,'vip')">خرید</button>
+      </div>
+
+      <div class="shop-item">
+        <img src="https://limogfx.ir/wp-content/uploads/2024/04/%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%DA%A9-%D9%86%D9%82%D8%B1%D9%87-%D8%A7%DB%8C-1.webp" alt="">
+        <div style="flex:1"><strong>اشتراک نقره‌ای</strong><div class="msg">900 امتیاز</div></div>
+        <button onclick="openBuyModal('اشتراک نقره‌ای',900,'silver')">خرید</button>
+      </div>
+
+      <div class="shop-item">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7xSj1j4VpAmTuq9LBOFrnJzDJ2P95yN1Cp4cDnNjgjIJ8EFyf87q1EpKnMJ5DBetcgdU&usqp=CAU" alt="">
+        <div style="flex:1"><strong>اشتراک برنز</strong><div class="msg">590 امتیاز</div></div>
+        <button onclick="openBuyModal('اشتراک برنز',590,'bronze')">خرید</button>
+      </div>
+
+      <div class="shop-item">
+        <img src="https://framerusercontent.com/images/JzzTUFwDNuBVlrLsYB6bSWo8RyM.png" alt="">
+        <div style="flex:1"><strong>خرید سرور ماینکرافت</strong><div class="msg">30000 امتیاز</div></div>
+        <button onclick="openBuyModal('خرید سرور ماینکرافت',30000,'minecraft')">خرید</button>
+      </div>
+
+      <p id="shopMsg" class="msg"></p>
+    </div>
+  </div>
+
+  <!-- wheel -->
+  <div class="panel">
+    <button class="btn" onclick="toggle('wheelSection')">گردونه شانس</button>
+    <div id="wheelSection" class="hidden" style="margin-top:12px; text-align:center;">
+      <canvas id="wheelCanvas" width="320" height="320"></canvas>
+      <div style="height:12px"></div>
+      <button id="spinBtn" class="btn" onclick="startSpin()">چرخش گردونه</button>
+      <p id="wheelMsg" class="msg"></p>
+    </div>
+  </div>
+
+  <!-- redeem -->
+  <div class="panel">
+    <button class="btn" onclick="toggle('redeem')">وارد کردن ردیم کد</button>
+    <div id="redeem" class="hidden" style="margin-top:12px;">
+      <input id="redeemCode" type="text" placeholder="کد را وارد کنید">
+      <button onclick="checkRedeem()">تأیید</button>
+      <p id="redeemMsg" class="msg"></p>
+    </div>
+  </div>
+
+  <!-- servers -->
+  <div class="panel">
+    <button class="btn" onclick="toggle('servers')">سرورها</button>
+    <div id="servers" class="hidden" style="margin-top:12px;">
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <button onclick="server1()">سرور 1</button>
+        <button onclick="server2()">سرور 2</button>
+        <button onclick="server3()">سرور 3</button>
+        <button onclick="server4()">سرور 4</button>
+      </div>
+      <img id="serverGif" class="server-gif hidden" style="margin-top:12px;width:80px;height:80px;">
+      <div id="serverMsg" class="msg" style="margin-top:10px"></div>
+
+      <div id="passwordSection" class="hidden" style="margin-top:10px">
+        <input id="serverPassword" type="text" placeholder="پسورد را وارد کنید">
+        <button onclick="checkPassword()">تأیید</button>
+        <button onclick="closePassword()">بستن</button>
+        <p id="passwordMsg" class="msg"></p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer style="z-index:3; position:relative; text-align:center; color:var(--muted);">© 2025 Zinox_pro — Galactic Cyber Panel</footer>
+
+<!-- Purchase Modal -->
+<div id="modalRoot" style="display:none;"></div>
 
 <script>
-const BMProWheel = (() => {
-  const canvas=document.getElementById("wheelCanvas");
-  const ctx=canvas.getContext("2d");
-  const radius=canvas.width/2;
-  const items=[
-    {text:"5 امتیاز", points:5, chance:0.66, color:"#ff0099"},
-    {text:"30 امتیاز", points:30, chance:0.3, color:"#ffcc00"},
-    {text:"60 امتیاز", points:60, chance:0.2, color:"#00ff99"},
-    {text:"پوچ", points:0, chance:0.89, color:"#555555"},
-    {text:"150 امتیاز", points:150, chance:0.01, color:"#ff3300"}
-  ];
+/* ------------------- Background canvas (dark space / subtle stars + gradient nebula) ------------------- */
+(function initBackground(){
+  const canvas = document.getElementById('spaceBg');
+  const dpr = window.devicePixelRatio || 1;
+  function resize(){
+    canvas.width = innerWidth * dpr;
+    canvas.height = innerHeight * dpr;
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+    draw();
+  }
+  window.addEventListener('resize', resize);
+  const ctx = canvas.getContext('2d');
+  // generate starfield positions
+  const stars = [];
+  const STAR_COUNT = 220;
+  for(let i=0;i<STAR_COUNT;i++){
+    stars.push({
+      x: Math.random(),
+      y: Math.random(),
+      r: Math.random()*1.2 + 0.2,
+      alpha: Math.random()*0.8 + 0.2,
+      speed: Math.random()*0.00015 + 0.00005
+    });
+  }
+  function draw(){
+    const w = canvas.width, h = canvas.height;
+    // background gradient (purple nebula)
+    const g = ctx.createLinearGradient(0,0,w, h);
+    g.addColorStop(0, '#05020a');
+    g.addColorStop(0.35, '#0c0420');
+    g.addColorStop(0.7, '#12042a');
+    g.addColorStop(1, '#000006');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
 
-  let spinning=false;
-  let points=parseInt(localStorage.getItem("bmpro_points"))||0;
-  document.getElementById("points").textContent=points;
+    // subtle nebula blobs
+    const grd = ctx.createRadialGradient(w*0.2, h*0.15, 0, w*0.2, h*0.15, Math.max(w,h)*0.6);
+    grd.addColorStop(0, 'rgba(123,97,255,0.08)');
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,w,h);
 
-  // رسم گردونه
-  function drawWheel(rotation=0){
-    const total=items.length;
-    const sliceAngle=2*Math.PI/total;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    for(let i=0;i<total;i++){
-      const startAngle=i*sliceAngle;
-      const endAngle=startAngle+sliceAngle;
-      ctx.save();
-      ctx.translate(radius,radius);
-      ctx.rotate(rotation);
+    const grd2 = ctx.createRadialGradient(w*0.8, h*0.75, 0, w*0.8, h*0.75, Math.max(w,h)*0.6);
+    grd2.addColorStop(0, 'rgba(98,60,180,0.06)');
+    grd2.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grd2;
+    ctx.fillRect(0,0,w,h);
+
+    // stars
+    const t = performance.now();
+    for(const s of stars){
+      const x = (s.x * w + Math.sin(t * s.speed * 0.6) * 30) % w;
+      const y = (s.y * h + Math.cos(t * s.speed * 0.7) * 10) % h;
       ctx.beginPath();
-      ctx.moveTo(0,0);
-      ctx.arc(0,0,radius,startAngle,endAngle);
-      ctx.fillStyle=items[i].color;
+      ctx.globalAlpha = s.alpha;
+      ctx.fillStyle = '#ffffff';
+      ctx.arc(x, y, s.r * dpr, 0, Math.PI*2);
       ctx.fill();
-      ctx.strokeStyle="#222";
-      ctx.stroke();
-      ctx.rotate(startAngle+sliceAngle/2);
-      ctx.textAlign="right";
-      ctx.fillStyle="#fff";
-      ctx.font="bold 16px Vazirmatn, sans-serif";
-      ctx.fillText(items[i].text,radius-10,5);
-      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function loop(){
+    draw();
+    requestAnimationFrame(loop);
+  }
+  resize();
+  loop();
+})();
+
+/* ------------------- state ------------------- */
+let points = parseInt(localStorage.getItem('bmpro_points')) || 0;
+const pointsEl = document.getElementById('points');
+function setPoints(v){ points = v; pointsEl.textContent = points; localStorage.setItem('bmpro_points', points); }
+setPoints(points);
+
+/* ------------------- simple helpers ------------------- */
+function toggle(id){ const el=document.getElementById(id); if(!el) return; el.classList.toggle('hidden'); }
+
+/* ------------------- user info (discord token flow) - unchanged logic ------------------- */
+(function loadDiscordUser(){
+  const fragment = new URLSearchParams(window.location.hash.slice(1));
+  const accessToken = fragment.get("access_token");
+  if(accessToken){
+    fetch("https://discord.com/api/users/@me", { headers: { Authorization: `Bearer ${accessToken}` } })
+      .then(r=>r.json())
+      .then(user=>{
+        document.getElementById("username").textContent = user.username + "#" + user.discriminator;
+        document.getElementById("userid").textContent = user.id;
+        localStorage.setItem("discord_user", JSON.stringify(user));
+        // clean hash
+        history.replaceState(null, '', location.pathname + location.search);
+      }).catch(()=>{ /* ignore */ });
+  } else {
+    const saved = localStorage.getItem("discord_user");
+    if(saved){
+      const user = JSON.parse(saved);
+      document.getElementById("username").textContent = user.username + "#" + user.discriminator;
+      document.getElementById("userid").textContent = user.id;
     }
   }
-  drawWheel();
+})();
 
-  // تایمر 24 ساعته
-  function updateTimer(){
-    const lastSpin=localStorage.getItem("bmpro_wheel_last");
-    const timerEl=document.getElementById("wheelTimer");
-    if(!lastSpin){timerEl.textContent=""; return;}
-    const now=Date.now();
-    const diff=24*60*60*1000 - (now - lastSpin);
-    if(diff<=0){timerEl.textContent="می‌توانید گردونه را بچرخانید"; return;}
-    const hours=Math.floor(diff/3600000);
-    const mins=Math.floor((diff%3600000)/60000);
-    const secs=Math.floor((diff%60000)/1000);
-    timerEl.textContent=`زمان تا چرخش بعدی: ${hours}س ${mins}د ${secs}ث`;
-    setTimeout(updateTimer,1000);
+/* ------------------- tasks ------------------- */
+// daily 24h
+function checkDaily(){
+  const last = parseInt(localStorage.getItem('bmpro_daily_last') || '0');
+  const now = Date.now();
+  if(last && now - last < 24*60*60*1000){
+    alert("⏰ پاداش روزانه قبلاً گرفته شده — تا 24 ساعت بعد صبر کنید.");
+    return;
   }
-  updateTimer();
+  setPoints(points + 100);
+  localStorage.setItem('bmpro_daily_last', ''+now);
+  alert("🎉 پاداش روزانه دریافت شد: 100 امتیاز");
+}
 
-  // انتخاب آیتم بر اساس احتمال
-  function selectItem(){
-    const r=Math.random();
-    let acc=0;
-    let chosen=items[0];
-    for(let item of items){
-      acc+=item.chance;
-      if(r<=acc){chosen=item; break;}
+// join Discord channel & complete task
+function joinDiscordChannel(){
+  window.open("https://discord.com/invite/kkdDtDcG","_blank");
+  completeTask('join');
+}
+
+// mobile input
+function showMobileInput(){ document.getElementById('mobileInput').classList.remove('hidden'); }
+function submitMobile(){
+  const mobile = (document.getElementById('mobile').value || '').trim();
+  const msg = document.getElementById('mobileMsg');
+  if(!/^09\d{9}$/.test(mobile)){ msg.textContent = "شماره نامعتبر است!"; return; }
+  msg.textContent = "در انتظار تایید ادمین";
+  if(!localStorage.getItem('bmpro_task_mobile')){
+    setPoints(points + 10);
+    localStorage.setItem('bmpro_task_mobile','1');
+  }
+}
+
+// complete task utility (same as before)
+function completeTask(task){
+  if(!localStorage.getItem('bmpro_task_'+task)){
+    setPoints(points + 10);
+    localStorage.setItem('bmpro_task_'+task,'1');
+    alert("تبریک! ۱۰ امتیاز گرفتید 🎉");
+  } else {
+    alert("این تسک رو قبلاً انجام دادید!");
+  }
+}
+
+/* ------------------- shop purchase modal flow (restores multi-step flow) ------------------- */
+function openBuyModal(title, cost, id){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal" role="dialog" aria-modal="true">
+        <h3 style="margin-top:0">${escapeHtml(title)}</h3>
+        <p class="msg">قیمت: ${cost} امتیاز</p>
+        <p class="msg">آیا مطمئن هستید می‌خواهید این آیتم را خریداری کنید؟</p>
+        <div style="display:flex;gap:10px;margin-top:14px;justify-content:flex-end">
+          <button id="confirmBuy" class="btn">تأیید خرید</button>
+          <button id="cancelBuy" class="btn">انصراف</button>
+        </div>
+        <p id="modalInfo" class="msg" style="margin-top:12px"></p>
+      </div>
+    </div>
+  `;
+  root.style.display = 'block';
+  document.getElementById('cancelBuy').onclick = closeModal;
+  document.getElementById('confirmBuy').onclick = function(){
+    // check balance
+    if(points < cost){
+      document.getElementById('modalInfo').textContent = 'امتیاز کافی نیست.';
+      return;
     }
-    return chosen;
+    // simulate purchase steps: deduct -> show code / instruction
+    setPoints(points - cost);
+    document.getElementById('modalInfo').textContent = 'خرید با موفقیت انجام شد. برای تکمیل سفارش به چنل خرید در دیسکورد مراجعه کنید یا منتظر تماس ادمین باشید.';
+    // disable confirm
+    document.getElementById('confirmBuy').disabled = true;
+    // optional: close after short delay
+    setTimeout(closeModal, 2200);
+  };
+}
+function closeModal(){ const root=document.getElementById('modalRoot'); root.innerHTML=''; root.style.display='none'; }
+function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ------------------- redeem code ------------------- */
+function checkRedeem(){
+  const code = (document.getElementById('redeemCode').value || '').trim();
+  const msg = document.getElementById('redeemMsg');
+  if(!code){ msg.textContent = 'کد را وارد کنید.'; return; }
+  if(code === 'ایران 2000'){
+    setPoints(points + 200000);
+    msg.textContent = '✅ کد پذیرفته شد — 200000 امتیاز اضافه شد.';
+  } else {
+    msg.textContent = '❌ کد نامعتبر است.';
   }
+}
 
-  function spin(){
-    if(spinning) return;
-    const lastSpin=localStorage.getItem("bmpro_wheel_last");
-    const now=Date.now();
-    if(lastSpin && now - lastSpin < 24*60*60*1000){alert("فقط یکبار در 24 ساعت می‌توانید بچرخانید"); return;}
-    spinning=true;
+/* ------------------- servers behavior ------------------- */
+/* Requirement: password prompt ONLY for server2 and server3.
+   server4: show connecting loader + "Connecting... Timeout" message
+   server1: show manual IP (same as before)
+*/
+function clearServerUI(){ document.getElementById('serverGif').classList.add('hidden'); document.getElementById('serverGif').src=''; document.getElementById('serverMsg').textContent=''; document.getElementById('passwordSection').classList.add('hidden'); document.getElementById('passwordMsg').textContent=''; }
+function server1(){ clearServerUI(); document.getElementById('serverMsg').textContent = 'ورود دستی! ای‌پی سرور: wii1-rFFa.aternos.me:22481'; }
+function server2(){ clearServerUI(); document.getElementById('serverMsg').textContent = 'برای ورود، لطفا پسورد را وارد کنید.'; document.getElementById('passwordSection').classList.remove('hidden'); }
+function server3(){ clearServerUI(); document.getElementById('serverMsg').textContent = 'برای ورود، لطفا پسورد را وارد کنید.'; document.getElementById('passwordSection').classList.remove('hidden'); }
+function server4(){
+  clearServerUI();
+  // show loader and "Connecting... Timeout"
+  const serverMsg = document.getElementById('serverMsg');
+  serverMsg.innerHTML = '<div style="display:flex;align-items:center;gap:12px"><div class="loader"></div><div>Connecting... <span style="opacity:0.8">Timeout</span></div></div>';
+  // simulate connecting attempt then timeout text remains
+  setTimeout(()=>{ serverMsg.innerHTML = '<div class="msg">Unable to connect — Timeout</div>'; }, 4200);
+}
 
-    const chosen=selectItem();
-    const spins=Math.floor(Math.random()*3)+3;
-    const sliceAngle=2*Math.PI/items.length;
-    const targetAngle=(items.indexOf(chosen)+0.5)*sliceAngle;
-    const totalRotation=spins*2*Math.PI + targetAngle;
+function checkPassword(){
+  const pass = (document.getElementById('serverPassword').value || '').trim();
+  const pmsg = document.getElementById('passwordMsg');
+  // previous hardcoded password was "ijff[hihfhofh" — keep it for consistency
+  if(pass === "ijff[hihfhofh"){
+    pmsg.textContent = "wii1-rFFa.aternos.me:22481";
+  } else {
+    pmsg.textContent = "پسورد اشتباه است";
+  }
+}
+function closePassword(){ document.getElementById('passwordSection').classList.add('hidden'); }
 
-    const startTime=performance.now();
-    const duration=4000;
+/* ------------------- wheel implementation (weighted, smooth) ------------------- */
+/*
+  Items (order in wheel drawing):
+   - پوچ (weight 0.90)
+   - 5 امتیاز (0.05)
+   - 30 امتیاز (0.03)
+   - 60 امتیاز (0.01)
+   - 150 امتیاز (0.01)
+*/
+const wheel = {
+  items: [
+    {label:'پوچ', points:0, weight:0.90, color:'#2b2b2b'},
+    {label:'5 امتیاز', points:5, weight:0.05, color:'#8fd6ff'},
+    {label:'30 امتیاز', points:30, weight:0.03, color:'#7ef2c6'},
+    {label:'60 امتیاز', points:60, weight:0.01, color:'#ffd57e'},
+    {label:'150 امتیاز', points:150, weight:0.01, color:'#ff9aa2'}
+  ],
+  canvas: document.getElementById('wheelCanvas'),
+  ctx: null,
+  size: 320,
+  rotation: 0
+};
+wheel.ctx = wheel.canvas.getContext('2d');
 
-    function animate(nowTime){
-      const t=(nowTime-startTime)/duration;
-      const ease=1-Math.pow(1-t,3);
-      const angle=ease*totalRotation;
-      drawWheel(angle);
-      if(t<1){
-        requestAnimationFrame(animate);
+function drawWheel(){
+  const ctx = wheel.ctx;
+  const s = wheel.size;
+  const cx = s/2, cy = s/2, r = s/2 - 8;
+  ctx.clearRect(0,0,s,s);
+  const n = wheel.items.length;
+  const slice = 2*Math.PI / n;
+
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(wheel.rotation);
+  for(let i=0;i<n;i++){
+    const start = i*slice;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.arc(0,0,r,start, start+slice);
+    ctx.closePath();
+    ctx.fillStyle = wheel.items[i].color;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.35)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // label
+    ctx.save();
+    ctx.rotate(start + slice/2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = (wheel.items[i].label === 'پوچ') ? '#ddd' : '#04121a';
+    ctx.font = "600 14px Orbitron";
+    ctx.fillText(wheel.items[i].label, r - 10, 6);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // draw pointer
+  ctx.beginPath();
+  ctx.moveTo(cx - 12, cy - r - 6);
+  ctx.lineTo(cx + 12, cy - r - 6);
+  ctx.lineTo(cx, cy - r + 12);
+  ctx.closePath();
+  ctx.fillStyle = '#ffd57e';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+  ctx.stroke();
+}
+drawWheel();
+
+/* weighted select */
+function weightedIndex(){
+  const r = Math.random();
+  let acc = 0;
+  for(let i=0;i<wheel.items.length;i++){
+    acc += wheel.items[i].weight;
+    if(r <= acc) return i;
+  }
+  return wheel.items.length - 1;
+}
+
+let spinning = false;
+function startSpin(){
+  if(spinning) return;
+  spinning = true;
+  document.getElementById('wheelMsg').textContent = 'در حال چرخش...';
+  const winIndex = weightedIndex();
+
+  // compute target rotation such that pointer lands in center of that slice
+  const n = wheel.items.length;
+  const sliceDeg = 360 / n;
+  const targetCenterDeg = winIndex * sliceDeg + sliceDeg/2;
+
+  // current rotation in deg
+  const currentDeg = (wheel.rotation * 180 / Math.PI) % 360;
+  const spins = Math.floor(Math.random() * 3) + 4; // 4..6 full spins
+  // rotate so that pointer (at 270 deg) faces the target segment center
+  // pointer angle relative to wheel: 270deg
+  const desiredDeg = spins * 360 + (360 - targetCenterDeg) + 270;
+  const delta = desiredDeg - currentDeg;
+  const duration = 4200 + Math.floor(Math.random()*800);
+  const startTime = performance.now();
+
+  function anim(now){
+    const t = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const deg = currentDeg + delta * ease;
+    wheel.rotation = deg * Math.PI / 180;
+    drawWheel();
+    if(t < 1) requestAnimationFrame(anim);
+    else {
+      spinning = false;
+      const item = wheel.items[winIndex];
+      if(item.points > 0){
+        setPoints(points + item.points);
+        document.getElementById('wheelMsg').textContent = `🎉 شما ${item.points} امتیاز گرفتید!`;
       } else {
-        spinning=false;
-        points+=chosen.points;
-        document.getElementById("points").textContent=points;
-        localStorage.setItem("bmpro_points",points);
-        localStorage.setItem("bmpro_wheel_last",Date.now());
-        document.getElementById("wheelMsg").textContent=`شما ${chosen.points} امتیاز گرفتید!`;
-        updateTimer();
+        document.getElementById('wheelMsg').textContent = `😕 پوچ! این بار شانس با شما نبود.`;
       }
     }
-    requestAnimationFrame(animate);
   }
+  requestAnimationFrame(anim);
+}
 
-  return {spin};
-})();
-</script>
+/* ------------------- init from localStorage ------------------- */
+/* points already loaded; show in UI */
+document.getElementById('points').textContent = points;
 
-  
-<!-- سرورها -->
-<div class="panel">
-  <button class="toggle-btn" onclick="toggleSection('servers')">سرورها</button>
-  <div id="servers" class="hidden">
-    <button id="srv1" onclick="server1()">سرور 1</button>
-    <button id="srv2" onclick="server2()">سرور 2</button>
-    <button id="srv3" onclick="server3()">سرور 3</button>
-    <button id="srv4" onclick="server4()">سرور 4</button>
-    <img id="serverGif" class="server-gif hidden">
-    <div id="serverMsg"></div>
-    <div id="passwordSection" class="hidden">
-      <input type="text" id="serverPassword" placeholder="پسورد را وارد کنید">
-      <button onclick="checkPassword()">تایید</button>
-      <button onclick="closePassword()">بستن</button>
-      <p id="passwordMsg"></p>
-    </div>
-  </div>
-</div>
+/* ------------------- safe utilities ------------------- */
+window.openBuyModal = openBuyModal;
+window.closeModal = closeModal;
+window.checkRedeem = checkRedeem;
+window.checkDaily = checkDaily;
+window.joinDiscordChannel = joinDiscordChannel;
+window.showMobileInput = showMobileInput;
+window.submitMobile = submitMobile;
+window.completeTask = completeTask;
+window.startSpin = startSpin;
+window.server1 = server1;
+window.server2 = server2;
+window.server3 = server3;
+window.server4 = server4;
+window.checkPassword = checkPassword;
+window.closePassword = closePassword;
 
-<script>
-const DISCORD_CLIENT_ID = "1413174935593156718";
-const REDIRECT_URI = "https://madsmart13.github.io/Zinox_pro/app.html";
-
-// toggle sections
-function toggleSection(id){document.getElementById(id).classList.toggle('hidden');}
-
-// کاربر
-const fragment=new URLSearchParams(window.location.hash.slice(1));
-const accessToken=fragment.get("access_token");
-if(accessToken){fetch("https://discord.com/api/users/@me",{headers:{Authorization:`Bearer ${accessToken}`}})
-.then(res=>res.json())
-.then(user=>{document.getElementById("username").textContent=user.username+"#"+user.discriminator;document.getElementById("userid").textContent=user.id;localStorage.setItem("discord_user",JSON.stringify(user))});}
-else{const savedUser=localStorage.getItem("discord_user");if(savedUser){const user=JSON.parse(savedUser);document.getElementById("username").textContent=user.username+"#"+user.discriminator;document.getElementById("userid").textContent=user.id;}}
-
-// امتیاز
-let points=parseInt(localStorage.getItem("bmpro_points"))||0;
-document.getElementById("points").textContent=points;
-function completeTask(task){if(!localStorage.getItem(`bmpro_task_${task}`)){points+=10;localStorage.setItem("bmpro_points",points);localStorage.setItem(`bmpro_task_${task}`,true);document.getElementById("points").textContent=points;alert("تبریک! ۱۰ امتیاز گرفتید 🎉");}else{alert("این تسک رو قبلاً انجام دادید!");}}
-
-// دیسکورد
-function joinDiscordChannel(){window.open("https://discord.com/invite/kkdDtDcG","_blank");completeTask('join');}
-
-// شماره موبایل
-function showMobileInput(){document.getElementById("mobileInput").classList.remove("hidden");}
-function submitMobile(){const mobile=document.getElementById("mobile").value.trim();const msg=document.getElementById("mobileMsg");if(!/^09\d{9}$/.test(mobile)){msg.textContent="شماره نامعتبر است!";return;}msg.textContent="در انتظار تایید ادمین";if(!localStorage.getItem('bmpro_task_mobile')){points+=10;localStorage.setItem("bmpro_points",points);localStorage.setItem('bmpro_task_mobile',true);document.getElementById("points").textContent=points;}}
-
-// فروشگاه
-function buyItem(id,cost){const msg=document.getElementById("shopMsg");if(points<cost){msg.textContent="امتیاز کافی نیست!";return;}points-=cost;localStorage.setItem("bmpro_points",points);document.getElementById("points").textContent=points;msg.textContent="در سرور دیسکورد ما در بخش خرید پیام بگذارید";}
-
-// سرورها و GIF
-let currentGif=null;
-function clearGif(){const gif=document.getElementById("serverGif");gif.classList.add("hidden");gif.src="";}
-function server1(){clearGif();document.getElementById("serverMsg").textContent="ورود دستی! ای پی سرور: wii1-rFFa.aternos.me:22481";}
-function server2(){clearGif();const gif=document.getElementById("serverGif");gif.src="https://cdn3d.iconscout.com/3d/premium/thumb/cloud-server-disconnected-3d-icon-png-download-4504975.png";gif.classList.remove("hidden");document.getElementById("serverMsg").textContent="سرور افلاین است";}
-function server3(){clearGif();document.getElementById("serverMsg").textContent="در حال اتصال...";setTimeout(()=>{const gif=document.getElementById("serverGif");gif.src="https://cdn3d.iconscout.com/3d/premium/thumb/cloud-server-disconnected-3d-icon-png-download-4504975.png";gif.classList.remove("hidden");document.getElementById("serverMsg").textContent="ورود خودکار ممکن نیست";},4000);}
-function server4(){clearGif();document.getElementById("serverMsg").textContent="در حال اتصال...";setTimeout(()=>{document.getElementById("serverMsg").textContent="";document.getElementById("passwordSection").classList.remove("hidden");},4000);}
-function checkPassword(){const pass=document.getElementById("serverPassword").value;const msg=document.getElementById("passwordMsg");if(pass==="ijff[hihfhofh"){msg.textContent="wii1-rFFa.aternos.me:22481";}else{msg.textContent="پسورد اشتباه است";}}
-function closePassword(){document.getElementById("passwordSection").classList.add("hidden");}
 </script>
 </body>
 </html>
